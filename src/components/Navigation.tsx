@@ -1,10 +1,21 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Menu, X } from "lucide-react";
+import { BookOpen, Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const handleDashboardClick = () => {
+    if (user?.role === 'student') {
+      navigate('/student-dashboard');
+    } else {
+      navigate('/instructor-dashboard');
+    }
+  };
 
   return (
     <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -20,18 +31,26 @@ const Navigation = () => {
             <Link to="/courses" className="text-foreground hover:text-primary transition-smooth">
               Courses
             </Link>
-            <Link to="/about" className="text-foreground hover:text-primary transition-smooth">
-              About
-            </Link>
-            <Link to="/contact" className="text-foreground hover:text-primary transition-smooth">
-              Contact
-            </Link>
-            <Link to="/login">
-              <Button variant="outline">Login</Button>
-            </Link>
-            <Link to="/register">
-              <Button variant="hero">Get Started</Button>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Button variant="ghost" onClick={handleDashboardClick}>
+                  Dashboard
+                </Button>
+                <Button variant="ghost" onClick={logout} className="gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login">
+                  <Button variant="ghost">Sign In</Button>
+                </Link>
+                <Link to="/register">
+                  <Button variant="hero">Get Started</Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -54,31 +73,27 @@ const Navigation = () => {
             >
               Courses
             </Link>
-            <Link
-              to="/about"
-              className="block text-foreground hover:text-primary transition-smooth"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              About
-            </Link>
-            <Link
-              to="/contact"
-              className="block text-foreground hover:text-primary transition-smooth"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Contact
-            </Link>
             <div className="flex flex-col gap-2 pt-2">
-              <Link to="/login" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="outline" className="w-full">
-                  Login
-                </Button>
-              </Link>
-              <Link to="/register" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="hero" className="w-full">
-                  Get Started
-                </Button>
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Button variant="ghost" onClick={() => { handleDashboardClick(); setIsMenuOpen(false); }} className="w-full">
+                    Dashboard
+                  </Button>
+                  <Button variant="ghost" onClick={() => { logout(); setIsMenuOpen(false); }} className="w-full gap-2">
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="ghost" className="w-full">Sign In</Button>
+                  </Link>
+                  <Link to="/register" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="hero" className="w-full">Get Started</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
