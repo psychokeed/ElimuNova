@@ -1,15 +1,23 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
-interface User {
+interface Profile {
   id: string;
-  name: string;
-  email: string;
+  full_name: string;
   role: 'student' | 'instructor';
+  avatar_url?: string;
+}
+
+interface User extends SupabaseUser {
+  profile?: Profile;
 }
 
 interface AuthContextType {
   user: User | null;
+  profile: Profile | null;
+  session: Session | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (name: string, email: string, password: string, role: 'student' | 'instructor') => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
@@ -20,42 +28,78 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('elimunova_user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          // Fetch user profile
+          setTimeout(async () => {
+            const { data: profileData } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (profileData) {
+              setProfile(profileData as Profile);
+            }
+          }, 0);
+        } else {
+          setProfile(null);
+        }
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        setTimeout(async () => {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profileData) {
+            setProfile(profileData as Profile);
+          }
+        }, 0);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const register = async (name: string, email: string, password: string, role: 'student' | 'instructor') => {
     try {
-      // Get existing users
-      const usersData = localStorage.getItem('elimunova_users');
-      const users = usersData ? JSON.parse(usersData) : [];
+      const redirectUrl = `${window.location.origin}/`;
 
-      // Check if user already exists
-      if (users.find((u: any) => u.email === email)) {
-        return { success: false, error: 'An account with this email already exists' };
-      }
-
-      // Create new user
-      const newUser = {
-        id: Math.random().toString(36).substr(2, 9),
-        name,
+      const { data, error } = await supabase.auth.signUp({
         email,
-        password, // In production, this would be hashed
-        role
-      };
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: name,
+            role: role
+          }
+        }
+      });
 
-      users.push(newUser);
-      localStorage.setItem('elimunova_users', JSON.stringify(users));
-
-      // Auto login after registration
-      const { password: _, ...userWithoutPassword } = newUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('elimunova_user', JSON.stringify(userWithoutPassword));
+      if (error) {
+        return { success: false, error: error.message };
+      }
 
       // Redirect based on role
       setTimeout(() => {
@@ -74,22 +118,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const usersData = localStorage.getItem('elimunova_users');
-      const users = usersData ? JSON.parse(usersData) : [];
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-      const user = users.find((u: any) => u.email === email && u.password === password);
-
-      if (!user) {
-        return { success: false, error: 'Invalid email or password' };
+      if (error) {
+        return { success: false, error: error.message };
       }
 
-      const { password: _, ...userWithoutPassword } = user;
-      setUser(userWithoutPassword);
-      localStorage.setItem('elimunova_user', JSON.stringify(userWithoutPassword));
+      // Get user profile to determine role
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
 
       // Redirect based on role
       setTimeout(() => {
-        if (user.role === 'student') {
+        if (profileData?.role === 'student') {
           navigate('/student-dashboard');
         } else {
           navigate('/instructor-dashboard');
@@ -102,14 +149,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('elimunova_user');
+    setProfile(null);
+    setSession(null);
     navigate('/');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, profile, session, login, register, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

@@ -6,11 +6,11 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, logout, isAuthenticated } = useAuth();
+  const { profile, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const handleDashboardClick = () => {
-    if (user?.role === 'student') {
+    if (profile?.role === 'student') {
       navigate('/student-dashboard');
     } else {
       navigate('/instructor-dashboard');

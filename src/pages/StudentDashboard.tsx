@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -6,24 +7,118 @@ import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { BookOpen, Clock, Award, TrendingUp, Play } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const StudentDashboard = () => {
-  // Mock data - will be replaced with real data from backend
-  const enrolledCourses: Array<{
-    id: number;
-    title: string;
-    progress: number;
-    lastLesson: string;
-    nextLesson: string;
-    totalLessons: number;
-    completedLessons: number;
-  }> = [];
+  const { profile } = useAuth();
+  const { toast } = useToast();
+  const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
+  const [recommendedCourses, setRecommendedCourses] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    totalCourses: 0,
+    learningHours: 0,
+    certificates: 0,
+    avgProgress: 0
+  });
+  const [loading, setLoading] = useState(true);
 
-  const recommendedCourses = [
-    { id: 4, title: "Advanced Python Programming", category: "Technology" },
-    { id: 5, title: "JavaScript Fundamentals", category: "Technology" },
-    { id: 6, title: "Database Design", category: "Data Science" },
-  ];
+  useEffect(() => {
+    if (profile?.id) {
+      fetchDashboardData();
+    }
+  }, [profile]);
+
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch enrolled courses with progress
+      const { data: enrollments, error: enrollError } = await supabase
+        .from('enrollments')
+        .select(`
+          id,
+          course_id,
+          courses (
+            id,
+            title,
+            description,
+            category,
+            lessons (
+              id,
+              title,
+              order_index,
+              duration_minutes
+            )
+          )
+        `)
+        .eq('student_id', profile!.id);
+
+      if (enrollError) throw enrollError;
+
+      // Calculate progress for each course
+      const coursesWithProgress = await Promise.all(
+        (enrollments || []).map(async (enrollment: any) => {
+          const course = enrollment.courses;
+          const totalLessons = course.lessons?.length || 0;
+          
+          const { data: progress, error: progressError } = await supabase
+            .from('lesson_progress')
+            .select('*')
+            .eq('student_id', profile!.id)
+            .in('lesson_id', course.lessons?.map((l: any) => l.id) || []);
+
+          if (progressError) throw progressError;
+
+          const completedLessons = progress?.filter((p: any) => p.completed).length || 0;
+          const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+
+          return {
+            id: course.id,
+            title: course.title,
+            progress: progressPercentage,
+            totalLessons,
+            completedLessons,
+            category: course.category
+          };
+        })
+      );
+
+      setEnrolledCourses(coursesWithProgress);
+
+      // Calculate stats
+      const avgProgress = coursesWithProgress.length > 0
+        ? coursesWithProgress.reduce((sum, c) => sum + c.progress, 0) / coursesWithProgress.length
+        : 0;
+
+      setStats({
+        totalCourses: coursesWithProgress.length,
+        learningHours: 0, // Can be calculated from lesson durations
+        certificates: coursesWithProgress.filter(c => c.progress === 100).length,
+        avgProgress: Math.round(avgProgress)
+      });
+
+      // Fetch recommended courses (not enrolled)
+      const { data: allCourses, error: coursesError } = await supabase
+        .from('courses')
+        .select('id, title, category')
+        .limit(3);
+
+      if (coursesError) throw coursesError;
+
+      const enrolledIds = coursesWithProgress.map(c => c.id);
+      const recommended = (allCourses || []).filter(c => !enrolledIds.includes(c.id));
+      setRecommendedCourses(recommended);
+
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load dashboard data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -52,36 +147,36 @@ const StudentDashboard = () => {
                   <CardTitle className="text-sm font-medium">Enrolled Courses</CardTitle>
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{enrolledCourses.length}</div>
-                </CardContent>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalCourses}</div>
+              </CardContent>
               </Card>
               <Card className="shadow-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">Learning Hours</CardTitle>
                   <Clock className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">0</div>
-                </CardContent>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.learningHours}</div>
+              </CardContent>
               </Card>
               <Card className="shadow-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">Certificates</CardTitle>
                   <Award className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">0</div>
-                </CardContent>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.certificates}</div>
+              </CardContent>
               </Card>
               <Card className="shadow-card">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">Avg Progress</CardTitle>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">0%</div>
-                </CardContent>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.avgProgress}%</div>
+              </CardContent>
               </Card>
             </div>
 
@@ -91,8 +186,12 @@ const StudentDashboard = () => {
                 <CardTitle>Continue Learning</CardTitle>
                 <CardDescription>Pick up where you left off</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {enrolledCourses.length === 0 ? (
+            <CardContent className="space-y-4">
+              {loading ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">Loading your courses...</p>
+                </div>
+              ) : enrolledCourses.length === 0 ? (
                   <div className="text-center py-8">
                     <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                     <p className="text-muted-foreground mb-4">You haven't enrolled in any courses yet</p>
@@ -109,11 +208,9 @@ const StudentDashboard = () => {
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <h3 className="font-semibold mb-1">{course.title}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Last watched: {course.lastLesson}
-                          </p>
+                          <Badge variant="secondary" className="mt-1">{course.category}</Badge>
                         </div>
-                        <Link to={`/lesson/${course.id}/next`}>
+                        <Link to={`/course/${course.id}`}>
                           <Button size="sm" variant="hero">
                             <Play className="h-4 w-4 mr-2" />
                             Continue
