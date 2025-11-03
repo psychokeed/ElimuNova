@@ -26,7 +26,7 @@ const Index = () => {
               </div>
               <h1 className="text-4xl md:text-6xl font-bold leading-tight">
                 Empowering Minds Through{" "}
-                <span className="gradient-hero bg-clip-text text-transparent">
+                <span className="text-primary">
                   Quality Education
                 </span>
               </h1>

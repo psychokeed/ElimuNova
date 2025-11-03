@@ -9,35 +9,15 @@ import { BookOpen, Clock, Award, TrendingUp, Play } from "lucide-react";
 
 const StudentDashboard = () => {
   // Mock data - will be replaced with real data from backend
-  const enrolledCourses = [
-    {
-      id: 1,
-      title: "Introduction to Programming",
-      progress: 65,
-      lastLesson: "Control Flow Statements",
-      nextLesson: "Functions and Modules",
-      totalLessons: 20,
-      completedLessons: 13,
-    },
-    {
-      id: 2,
-      title: "Web Development Fundamentals",
-      progress: 40,
-      lastLesson: "CSS Flexbox",
-      nextLesson: "CSS Grid Layout",
-      totalLessons: 30,
-      completedLessons: 12,
-    },
-    {
-      id: 3,
-      title: "Data Science Basics",
-      progress: 20,
-      lastLesson: "Introduction to Python",
-      nextLesson: "Data Types and Structures",
-      totalLessons: 18,
-      completedLessons: 4,
-    },
-  ];
+  const enrolledCourses: Array<{
+    id: number;
+    title: string;
+    progress: number;
+    lastLesson: string;
+    nextLesson: string;
+    totalLessons: number;
+    completedLessons: number;
+  }> = [];
 
   const recommendedCourses = [
     { id: 4, title: "Advanced Python Programming", category: "Technology" },
@@ -82,7 +62,7 @@ const StudentDashboard = () => {
                   <Clock className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">24.5</div>
+                  <div className="text-2xl font-bold">0</div>
                 </CardContent>
               </Card>
               <Card className="shadow-card">
@@ -91,7 +71,7 @@ const StudentDashboard = () => {
                   <Award className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">2</div>
+                  <div className="text-2xl font-bold">0</div>
                 </CardContent>
               </Card>
               <Card className="shadow-card">
@@ -100,7 +80,7 @@ const StudentDashboard = () => {
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">42%</div>
+                  <div className="text-2xl font-bold">0%</div>
                 </CardContent>
               </Card>
             </div>
@@ -112,36 +92,46 @@ const StudentDashboard = () => {
                 <CardDescription>Pick up where you left off</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {enrolledCourses.map((course) => (
-                  <div
-                    key={course.id}
-                    className="p-4 border border-border rounded-lg hover:shadow-card transition-smooth"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-semibold mb-1">{course.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Last watched: {course.lastLesson}
-                        </p>
-                      </div>
-                      <Link to={`/lesson/${course.id}/next`}>
-                        <Button size="sm" variant="hero">
-                          <Play className="h-4 w-4 mr-2" />
-                          Continue
-                        </Button>
-                      </Link>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-semibold">
-                          {course.completedLessons}/{course.totalLessons} lessons
-                        </span>
-                      </div>
-                      <Progress value={course.progress} className="h-2" />
-                    </div>
+                {enrolledCourses.length === 0 ? (
+                  <div className="text-center py-8">
+                    <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground mb-4">You haven't enrolled in any courses yet</p>
+                    <Link to="/courses">
+                      <Button variant="hero">Browse Courses</Button>
+                    </Link>
                   </div>
-                ))}
+                ) : (
+                  enrolledCourses.map((course) => (
+                    <div
+                      key={course.id}
+                      className="p-4 border border-border rounded-lg hover:shadow-card transition-smooth"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-semibold mb-1">{course.title}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Last watched: {course.lastLesson}
+                          </p>
+                        </div>
+                        <Link to={`/lesson/${course.id}/next`}>
+                          <Button size="sm" variant="hero">
+                            <Play className="h-4 w-4 mr-2" />
+                            Continue
+                          </Button>
+                        </Link>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Progress</span>
+                          <span className="font-semibold">
+                            {course.completedLessons}/{course.totalLessons} lessons
+                          </span>
+                        </div>
+                        <Progress value={course.progress} className="h-2" />
+                      </div>
+                    </div>
+                  ))
+                )}
               </CardContent>
             </Card>
 
