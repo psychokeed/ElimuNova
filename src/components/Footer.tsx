@@ -9,7 +9,7 @@ const Footer = () => {
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2 font-bold text-xl">
               <BookOpen className="h-6 w-6 text-primary" />
-              <span className="gradient-hero bg-clip-text text-transparent">ElimuNova</span>
+              <span className="text-primary">ElimuNova</span>
             </Link>
             <p className="text-sm text-muted-foreground">
               Empowering learners worldwide with quality, accessible education.
