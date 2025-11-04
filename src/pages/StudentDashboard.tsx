@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { BookOpen, Clock, Award, TrendingUp, Play } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -121,8 +122,9 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
+    <ProtectedRoute requiredRole="student">
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
 
       <div className="flex-1">
         {/* Header */}
@@ -263,8 +265,9 @@ const StudentDashboard = () => {
         </section>
       </div>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </ProtectedRoute>
   );
 };
 

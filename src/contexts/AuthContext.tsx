@@ -10,6 +10,10 @@ interface Profile {
   avatar_url?: string;
 }
 
+interface UserRole {
+  role: 'student' | 'instructor';
+}
+
 interface User extends SupabaseUser {
   profile?: Profile;
 }
@@ -40,16 +44,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Fetch user profile
+          // Fetch user profile and role from secure table
           setTimeout(async () => {
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
+            const [profileResult, roleResult] = await Promise.all([
+              supabase.from('profiles').select('*').eq('id', session.user.id).single(),
+              supabase.from('user_roles').select('role').eq('user_id', session.user.id).single()
+            ]);
             
-            if (profileData) {
-              setProfile(profileData as Profile);
+            if (profileResult.data && roleResult.data) {
+              setProfile({
+                ...profileResult.data,
+                role: roleResult.data.role
+              } as Profile);
             }
           }, 0);
         } else {
@@ -65,14 +71,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (session?.user) {
         setTimeout(async () => {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+          const [profileResult, roleResult] = await Promise.all([
+            supabase.from('profiles').select('*').eq('id', session.user.id).single(),
+            supabase.from('user_roles').select('role').eq('user_id', session.user.id).single()
+          ]);
           
-          if (profileData) {
-            setProfile(profileData as Profile);
+          if (profileResult.data && roleResult.data) {
+            setProfile({
+              ...profileResult.data,
+              role: roleResult.data.role
+            } as Profile);
           }
         }, 0);
       }
@@ -127,16 +135,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { success: false, error: error.message };
       }
 
-      // Get user profile to determine role
-      const { data: profileData } = await supabase
-        .from('profiles')
+      // Get user role from secure table
+      const { data: roleData } = await supabase
+        .from('user_roles')
         .select('role')
-        .eq('id', data.user.id)
+        .eq('user_id', data.user.id)
         .single();
 
       // Redirect based on role
       setTimeout(() => {
-        if (profileData?.role === 'student') {
+        if (roleData?.role === 'student') {
           navigate('/student-dashboard');
         } else {
           navigate('/instructor-dashboard');

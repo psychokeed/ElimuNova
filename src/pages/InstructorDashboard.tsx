@@ -1,43 +1,93 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { BookOpen, Users, TrendingUp, Plus, Edit, BarChart3 } from "lucide-react";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { BookOpen, Users, TrendingUp, Plus, Edit, BarChart3, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  level: string;
+  duration: string;
+  thumbnail_url?: string;
+  students: number;
+  lessons: number;
+}
 
 const InstructorDashboard = () => {
-  // Mock data - will be replaced with real data from backend
-  const myCourses = [
-    {
-      id: 1,
-      title: "Introduction to Programming",
-      students: 1234,
-      rating: 4.8,
-      published: true,
-      modules: 3,
-    },
-    {
-      id: 2,
-      title: "Advanced Python Techniques",
-      students: 567,
-      rating: 4.9,
-      published: true,
-      modules: 4,
-    },
-    {
-      id: 3,
-      title: "Machine Learning Fundamentals",
-      students: 0,
-      rating: 0,
-      published: false,
-      modules: 2,
-    },
-  ];
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      fetchInstructorCourses();
+    }
+  }, [user]);
+
+  const fetchInstructorCourses = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch courses created by this instructor
+      const { data: coursesData, error: coursesError } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('instructor_id', user!.id);
+
+      if (coursesError) throw coursesError;
+
+      // Fetch enrollment counts and lesson counts for each course
+      const coursesWithStats = await Promise.all(
+        (coursesData || []).map(async (course) => {
+          const [enrollmentsResult, lessonsResult] = await Promise.all([
+            supabase
+              .from('enrollments')
+              .select('id', { count: 'exact', head: true })
+              .eq('course_id', course.id),
+            supabase
+              .from('lessons')
+              .select('id', { count: 'exact', head: true })
+              .eq('course_id', course.id)
+          ]);
+
+          return {
+            ...course,
+            students: enrollmentsResult.count || 0,
+            lessons: lessonsResult.count || 0,
+          } as Course;
+        })
+      );
+
+      setCourses(coursesWithStats);
+    } catch (error: any) {
+      toast({
+        title: "Error loading courses",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalStudents = courses.reduce((acc, course) => acc + course.students, 0);
+  const publishedCourses = courses.length; // All fetched courses are considered published
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
+    <ProtectedRoute requiredRole="instructor">
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
 
       <div className="flex-1">
         {/* Header */}
@@ -71,9 +121,9 @@ const InstructorDashboard = () => {
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{myCourses.length}</div>
+                  <div className="text-2xl font-bold">{loading ? '-' : courses.length}</div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {myCourses.filter((c) => c.published).length} published
+                    {loading ? '-' : publishedCourses} published
                   </p>
                 </CardContent>
               </Card>
@@ -84,7 +134,7 @@ const InstructorDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {myCourses.reduce((acc, course) => acc + course.students, 0).toLocaleString()}
+                    {loading ? '-' : totalStudents.toLocaleString()}
                   </div>
                 </CardContent>
               </Card>
@@ -116,51 +166,58 @@ const InstructorDashboard = () => {
                 <CardDescription>Manage and monitor your courses</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {myCourses.map((course) => (
-                    <div
-                      key={course.id}
-                      className="p-4 border border-border rounded-lg hover:shadow-card transition-smooth"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold">{course.title}</h3>
-                            <Badge variant={course.published ? "secondary" : "outline"}>
-                              {course.published ? "Published" : "Draft"}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Users className="h-4 w-4" />
-                              <span>{course.students.toLocaleString()} students</span>
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : courses.length === 0 ? (
+                  <div className="text-center py-8">
+                    <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No courses yet. Create your first course to get started!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {courses.map((course) => (
+                      <div
+                        key={course.id}
+                        className="p-4 border border-border rounded-lg hover:shadow-card transition-smooth"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold">{course.title}</h3>
+                              <Badge variant="secondary">Published</Badge>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <BookOpen className="h-4 w-4" />
-                              <span>{course.modules} modules</span>
-                            </div>
-                            {course.published && (
+                            <p className="text-sm text-muted-foreground mb-3">{course.description}</p>
+                            <div className="flex items-center gap-6 text-sm text-muted-foreground">
                               <div className="flex items-center gap-1">
-                                <TrendingUp className="h-4 w-4" />
-                                <span>{course.rating} rating</span>
+                                <Users className="h-4 w-4" />
+                                <span>{course.students.toLocaleString()} students</span>
                               </div>
-                            )}
+                              <div className="flex items-center gap-1">
+                                <BookOpen className="h-4 w-4" />
+                                <span>{course.lessons} lessons</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span className="font-medium">{course.level}</span>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm">
-                            <BarChart3 className="h-4 w-4 mr-2" />
-                            Analytics
-                          </Button>
-                          <Button variant="default" size="sm">
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm">
+                              <BarChart3 className="h-4 w-4 mr-2" />
+                              Analytics
+                            </Button>
+                            <Button variant="default" size="sm">
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -198,8 +255,9 @@ const InstructorDashboard = () => {
         </section>
       </div>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </ProtectedRoute>
   );
 };
 
