@@ -19,11 +19,6 @@ const Index = () => {
         <div className="container mx-auto px-4 py-20 md:py-32">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6 animate-fade-in">
-              <div className="inline-block">
-                <span className="text-sm font-semibold text-primary bg-primary/10 px-4 py-2 rounded-full">
-                  UN SDG 4: Quality Education
-                </span>
-              </div>
               <h1 className="text-4xl md:text-6xl font-bold leading-tight">
                 Empowering Minds Through{" "}
                 <span className="text-primary">

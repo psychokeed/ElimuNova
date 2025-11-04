@@ -81,7 +81,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-border mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} ElimuNova. Supporting UN SDG 4: Quality Education for All.</p>
+          <p>&copy; {new Date().getFullYear()} ElimuNova. Empowering learners worldwide.</p>
         </div>
       </div>
     </footer>
