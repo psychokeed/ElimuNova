@@ -102,7 +102,12 @@ const InstructorDashboard = () => {
                   Manage your courses and reach more students
                 </p>
               </div>
-              <Button variant="secondary" size="lg" className="shadow-card-hover">
+              <Button
+                variant="secondary"
+                size="lg"
+                className="shadow-card-hover"
+                onClick={() => window.location.href = '/create-course'}
+              >
                 <Plus className="h-5 w-5 mr-2" />
                 Create New Course
               </Button>
@@ -223,7 +228,10 @@ const InstructorDashboard = () => {
 
             {/* Quick Actions */}
             <div className="grid md:grid-cols-3 gap-6">
-              <Card className="shadow-card hover:shadow-card-hover transition-smooth cursor-pointer">
+              <Card
+                className="shadow-card hover:shadow-card-hover transition-smooth cursor-pointer"
+                onClick={() => window.location.href = '/create-course'}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Plus className="h-5 w-5 text-primary" />
@@ -232,7 +240,10 @@ const InstructorDashboard = () => {
                   <CardDescription>Start building a new course</CardDescription>
                 </CardHeader>
               </Card>
-              <Card className="shadow-card hover:shadow-card-hover transition-smooth cursor-pointer">
+              <Card
+                className="shadow-card hover:shadow-card-hover transition-smooth cursor-pointer"
+                onClick={() => window.location.href = '/students'}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-primary" />
@@ -241,7 +252,10 @@ const InstructorDashboard = () => {
                   <CardDescription>See who's enrolled in your courses</CardDescription>
                 </CardHeader>
               </Card>
-              <Card className="shadow-card hover:shadow-card-hover transition-smooth cursor-pointer">
+              <Card
+                className="shadow-card hover:shadow-card-hover transition-smooth cursor-pointer"
+                onClick={() => window.location.href = '/analytics'}
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5 text-primary" />

@@ -11,6 +11,7 @@ import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
 import StudentDashboard from "./pages/StudentDashboard";
 import InstructorDashboard from "./pages/InstructorDashboard";
+import CreateCourse from "./pages/CreateCourse";
 import LessonViewer from "./pages/LessonViewer";
 import NotFound from "./pages/NotFound";
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/course/:id" element={<CourseDetail />} />
             <Route path="/student-dashboard" element={<StudentDashboard />} />
             <Route path="/instructor-dashboard" element={<InstructorDashboard />} />
+            <Route path="/create-course" element={<CreateCourse />} />
             <Route path="/lesson/:courseId/:lessonId" element={<LessonViewer />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

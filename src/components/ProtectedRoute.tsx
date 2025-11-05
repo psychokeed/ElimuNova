@@ -24,7 +24,8 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
       return;
     }
 
-    if (requiredRole && profile?.role !== requiredRole) {
+    // Wait for profile to load before checking role
+    if (requiredRole && profile && profile.role !== requiredRole) {
       toast({
         title: "Access denied",
         description: `This page is only accessible to ${requiredRole}s.`,
@@ -34,7 +35,16 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     }
   }, [isAuthenticated, profile, requiredRole, navigate, toast]);
 
-  if (!isAuthenticated || (requiredRole && profile?.role !== requiredRole)) {
+  // Show loading state while profile is being fetched
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  if (requiredRole && !profile) {
+    return null; // Loading profile
+  }
+
+  if (requiredRole && profile?.role !== requiredRole) {
     return null;
   }
 
