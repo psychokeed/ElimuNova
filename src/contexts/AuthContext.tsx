@@ -39,25 +39,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
           // Fetch user profile and role from secure table
-          setTimeout(async () => {
-            const [profileResult, roleResult] = await Promise.all([
-              supabase.from('profiles').select('*').eq('id', session.user.id).single(),
-              supabase.from('user_roles').select('role').eq('user_id', session.user.id).single()
-            ]);
-            
+          Promise.all([
+            supabase.from('profiles').select('*').eq('id', session.user.id).single(),
+            supabase.from('user_roles').select('role').eq('user_id', session.user.id).single()
+          ]).then(([profileResult, roleResult]) => {
             if (profileResult.data && roleResult.data) {
               setProfile({
                 ...profileResult.data,
                 role: roleResult.data.role
               } as Profile);
             }
-          }, 0);
+          });
         } else {
           setProfile(null);
         }
@@ -70,19 +68,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        setTimeout(async () => {
-          const [profileResult, roleResult] = await Promise.all([
-            supabase.from('profiles').select('*').eq('id', session.user.id).single(),
-            supabase.from('user_roles').select('role').eq('user_id', session.user.id).single()
-          ]);
-          
+        Promise.all([
+          supabase.from('profiles').select('*').eq('id', session.user.id).single(),
+          supabase.from('user_roles').select('role').eq('user_id', session.user.id).single()
+        ]).then(([profileResult, roleResult]) => {
           if (profileResult.data && roleResult.data) {
             setProfile({
               ...profileResult.data,
               role: roleResult.data.role
             } as Profile);
           }
-        }, 0);
+        });
       }
     });
 
