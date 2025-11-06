@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Navigation from "@/components/Navigation";
 import { BookOpen } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -14,7 +13,6 @@ const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"student" | "instructor">("student");
   const [isLoading, setIsLoading] = useState(false);
   const { register, isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -30,7 +28,7 @@ const Register = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const result = await register(name, email, password, role);
+    const result = await register(name, email, password);
 
     if (result.success) {
       toast({
@@ -96,23 +94,6 @@ const Register = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required 
                 />
-              </div>
-              <div className="space-y-2">
-                <Label>I want to</Label>
-                <RadioGroup value={role} onValueChange={(value) => setRole(value as "student" | "instructor")}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="student" id="student" />
-                    <Label htmlFor="student" className="font-normal cursor-pointer">
-                      Learn (Student)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="instructor" id="instructor" />
-                    <Label htmlFor="instructor" className="font-normal cursor-pointer">
-                      Teach (Instructor)
-                    </Label>
-                  </div>
-                </RadioGroup>
               </div>
               <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
                 {isLoading ? "Creating account..." : "Create Account"}

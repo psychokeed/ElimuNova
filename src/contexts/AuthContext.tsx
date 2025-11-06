@@ -23,7 +23,7 @@ interface AuthContextType {
   profile: Profile | null;
   session: Session | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (name: string, email: string, password: string, role: 'student' | 'instructor') => Promise<{ success: boolean; error?: string }>;
+  register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const register = async (name: string, email: string, password: string, role: 'student' | 'instructor') => {
+  const register = async (name: string, email: string, password: string) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
 
@@ -95,8 +95,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: name,
-            role: role
+            full_name: name
+            // Role removed - all users default to 'student' for security
           }
         }
       });
@@ -105,13 +105,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { success: false, error: error.message };
       }
 
-      // Redirect based on role
+      // All new users are students - redirect to student dashboard
       setTimeout(() => {
-        if (role === 'student') {
-          navigate('/student-dashboard');
-        } else {
-          navigate('/instructor-dashboard');
-        }
+        navigate('/student-dashboard');
       }, 100);
 
       return { success: true };
