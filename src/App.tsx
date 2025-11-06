@@ -12,6 +12,8 @@ import CourseDetail from "./pages/CourseDetail";
 import StudentDashboard from "./pages/StudentDashboard";
 import InstructorDashboard from "./pages/InstructorDashboard";
 import CreateCourse from "./pages/CreateCourse";
+import Students from "./pages/Students";
+import Analytics from "./pages/Analytics";
 import LessonViewer from "./pages/LessonViewer";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +35,8 @@ const App = () => (
             <Route path="/student-dashboard" element={<StudentDashboard />} />
             <Route path="/instructor-dashboard" element={<InstructorDashboard />} />
             <Route path="/create-course" element={<CreateCourse />} />
+            <Route path="/students" element={<Students />} />
+            <Route path="/analytics" element={<Analytics />} />
             <Route path="/lesson/:courseId/:lessonId" element={<LessonViewer />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
