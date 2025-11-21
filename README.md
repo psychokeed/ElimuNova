@@ -1,58 +1,64 @@
-# Welcome to your Lovable project
+# ElimuNova
 
-## Project info
+ElimuNova is a modern, fast web application for delivering interactive learning content. It combines a Vite + React + TypeScript frontend with shadcn-ui and Tailwind CSS to provide a responsive, accessible learning interface.
 
-**URL**: https://lovable.dev/projects/6d225b3a-7b07-47b2-9e33-ae8554f5ed03
+Features
 
-## How can I edit this code?
+- Create and browse courses and lessons
+- Rich content rendering (text, images, video, quizzes)
+- Responsive UI built with shadcn-ui + Tailwind CSS
+- Fast development experience with Vite and TypeScript
 
-There are several ways of editing your application.
+Demo & deploy
 
-**Use Lovable**
+- Deployed application: REPLACE_WITH_DEPLOYED_APP_URL
+- 5–10 minute demo video: REPLACE_WITH_VIDEO_URL
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6d225b3a-7b07-47b2-9e33-ae8554f5ed03) and start prompting.
+Screenshots
 
-Changes made via Lovable will be committed automatically to this repo.
+Add screenshots in the repository under /docs/screenshots and reference them here. Example:
 
-**Use your preferred IDE**
+![Course list](/docs/screenshots/course-list.png)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+![Lesson view](/docs/screenshots/lesson-view.png)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Setup (local development)
 
-Follow these steps:
+Prerequisites
+
+- Node.js 16 or newer
+- npm (or pnpm/yarn)
+
+Clone and run
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# 1. Clone the repo
+git clone https://github.com/psychokeed/ElimuNova.git
+cd ElimuNova
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# 2. Install dependencies
+npm install
 
-# Step 3: Install the necessary dependencies.
-npm i
+# 3. Create a .env file (if required)
+# Copy .env.example to .env and edit any required variables
+cp .env.example .env || true
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 4. Start the development server
 npm run dev
+
+# 5. Build for production
+npm run build
+
+# 6. Preview production build locally
+npm run preview
 ```
 
-**Edit a file directly in GitHub**
+Notes
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- Replace the placeholder URLs above with your actual deployed app URL and the demo video link.
+- Add screenshots to /docs/screenshots and commit them; they will render above.
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
+Technologies
 
 - Vite
 - TypeScript
@@ -60,14 +66,10 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+Contributing
 
-Simply open [Lovable](https://lovable.dev/projects/6d225b3a-7b07-47b2-9e33-ae8554f5ed03) and click on Share -> Publish.
+Contributions are welcome. Please open issues or pull requests with proposed changes.
 
-## Can I connect a custom domain to my Lovable project?
+License
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Specify your project license here (e.g., MIT).
